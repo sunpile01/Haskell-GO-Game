@@ -59,15 +59,6 @@ handleMouseClick gameState (SDL.Event _ (SDL.MouseButtonEvent mouseButtonEventDa
      else gameState                                                           -- Move not valid return the old gameState
 handleMouseClick gameState _ = gameState
 
--- | Updates the specified position on the board with the given stone. Haskell lists are immutable,
--- so it is necessary to create a new list as the return value with the updated row
-placeStone :: Move -> Board -> Board
-placeStone (Move stone (x,y)) oldBoard =
-  let row = oldBoard !! y                 -- Get the row to be updated
-      newRow = take x row ++ [stone] ++ drop (x+1) row -- New row with the updated value for the coordinate
-      newBoard = take y oldBoard ++ [newRow] ++ drop (y +1) oldBoard  -- Replacing the old row with the new row for the updateBoard
-  in newBoard
-
 -- | Handles the different keypresses for the different computer generated moves available and then calls the 'updateGameComputerMove' function
 -- with the correct 'ComputerMove' type
 handleKeyPress :: GameState -> SDL.Event -> GameState
@@ -80,7 +71,7 @@ handleKeyPress gameState (SDL.Event _ (SDL.KeyboardEvent keyboardEvent))
       updateGameComputerMove gameState ConnectGroups
 handleKeyPress gameState _ = gameState
 
-- | Places the computer move on the board by pattern matching the type of ComputerMove and then executing the appropriate function
+-- | Places the computer move on the board by pattern matching the type of ComputerMove and then executing the appropriate function
 -- Then updates the game state with the new board created by the computer move and all the properties of the game state that need to
 -- updated after every move
 updateGameComputerMove :: GameState -> ComputerMove -> GameState
@@ -161,6 +152,14 @@ findBestMove gameState mapper = do
   if null moves then Nothing else Just (fst (maximumBy (comparing snd) moves)) -- Finds the coordinate with the highest corresponding integer value and returns it
 
 
+-- | Updates the specified position on the board with the given stone. Haskell lists are immutable,
+-- so it is necessary to create a new list as the return value with the updated row
+placeStone :: Move -> Board -> Board
+placeStone (Move stone (x,y)) oldBoard =
+  let row = oldBoard !! y                 -- Get the row to be updated
+      newRow = take x row ++ [stone] ++ drop (x+1) row -- New row with the updated value for the coordinate
+      newBoard = take y oldBoard ++ [newRow] ++ drop (y +1) oldBoard  -- Replacing the old row with the new row for the updateBoard
+  in newBoard
 
 -- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
 -- Every condition must be satisfied for the move to be valid.
@@ -189,7 +188,6 @@ isKOMove currentBoard twoTurnsAgoBoard coord stone =
   let tempBoard = placeStone (Move stone coord) currentBoard  -- Simulate placing the stone on the board
       tempBoardCaptures = captureStones (GameState tempBoard [] [] [] TerritoryScoring Nothing 0) stone -- Simulate stones potentially being captured
   in currBoard tempBoardCaptures == twoTurnsAgoBoard        -- If the simulated stone placing results in the same board state two turns ago it is a KO move
-
 
 -- | Uses recursion and a list of already visited coordinates to find all stones in the group.
 -- A group is same colored stones that is vertically or horizontally adjacent.
@@ -260,11 +258,34 @@ getStoneYX board (x,y) = board !! y !! x
 getStoneXY :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
 getStoneXY board (x,y) = board !! x !! y
 
+-- | Counts all the coordinates that is a territory of a certain player and returns the integer number
+countTerritory :: Board -> Maybe Stone -> CInt-> Int
+countTerritory board stone boardSize = length $ filter (isTerritory board stone) (allCoordinates boardSize) -- Checks if each coordinate is a territory of
+  where                                                                                                     -- the given player
+    allCoordinates = getAllCoordinates
+
+-- | It is a territory of a certain player if all the empty coordinates in that area is surrounded by stones of a specific
+-- color. Explained in other words:
+-- An empty point (or coordinate) is considered part of a player's territory if:
+-- It is not occupied by a stone (it is Nothing).
+-- All the adjacent points of the empty point are either:
+-- a. Occupied by the same player's stones (either Black or White), or
+-- b. Part of the same territory (they are also empty and meet the same conditions).
+isTerritory :: Board -> Maybe Stone -> Coordinate -> Bool
+isTerritory board stone coord
+  | isJust (getStoneYX board coord) = False             -- If it is a stone value then it is not a territory of a player
+  | otherwise = all (== stone) borderingStones     -- if all of the unique adjacent stone coordinates to the group of Nothing coordinates is a certain color
+  where
+    emptyGroup = findGroupWrapper board Nothing coord getStoneYX      -- Gets the group of empty coordinates
+    -- Checks all the unique adjacent stone coordinates to the group of Nothing coordinates
+    borderingStones = removeDuplicateStones $ concatMap (adjacentStones board) emptyGroup
+
 -- | Get the stones adjacent to a coordinate. Could also have used adjacentCoords in the isTerritory,
 -- but felt like it was easier to read when i created this adjacentStones function instead.
 adjacentStones :: Board -> Coordinate -> [Maybe Stone]
 adjacentStones board coord =
   filter isJust (map (getStoneYX board) (adjacentCoords board coord))
+
 
 -- | Count the number of stones on the board for each player
 countStones :: Board -> Maybe Stone -> Int

@@ -116,93 +116,94 @@ hspecTests = hspec $ do
         , [Just White,   Just Black, Nothing,    Just White, Just Black,   Nothing   ]
         , [Nothing,      Just White, Just White, Just Black, Just Black,   Just White]
         , [Just White,   Just Black, Just Black, Nothing,    Just White,   Nothing   ]]
-    describe "getStoneYX" $ do
-      it "gets the stone at a given coordinate" $ do
-        getStoneYX testBoard (1, 0) `shouldBe` Just Black
-        getStoneYX testBoard (2, 0) `shouldBe` Nothing
 
-    describe "getStoneXY" $ do
-      it "gets the stone at a given coordinate" $ do
-        getStoneXY testBoard (0, 1) `shouldBe` Just Black
-        getStoneXY testBoard (0, 2) `shouldBe` Nothing
+  describe "getStoneYX" $ do
+    it "gets the stone at a given coordinate" $ do
+      getStoneYX testBoard (1, 0) `shouldBe` Just Black
+      getStoneYX testBoard (2, 0) `shouldBe` Nothing
 
-    describe "countTerritory" $ do
-      it "counts territory for black correctly" $ do
-        countTerritory testBoard (Just Black) 6 `shouldBe` 2
+  describe "getStoneXY" $ do
+    it "gets the stone at a given coordinate" $ do
+      getStoneXY testBoard (0, 1) `shouldBe` Just Black
+      getStoneXY testBoard (0, 2) `shouldBe` Nothing
 
-      it "counts territory for white correctly" $ do
-        countTerritory testBoard (Just White) 6 `shouldBe` 2
+  describe "countTerritory" $ do
+    it "counts territory for black correctly" $ do
+      countTerritory testBoard (Just Black) 6 `shouldBe` 2
 
-    describe "adjacentStones" $ do
-      it "returns correct adjacent stones for a given coordinate" $ do
-        adjacentStones testBoard (1, 2) `shouldBe` [Just Black, Just Black]
+    it "counts territory for white correctly" $ do
+      countTerritory testBoard (Just White) 6 `shouldBe` 2
 
-    describe "countStones" $ do
-      it "counts black stones correctly" $ do
-        countStones testBoard (Just Black) `shouldBe` 11
+  describe "adjacentStones" $ do
+    it "returns correct adjacent stones for a given coordinate" $ do
+      adjacentStones testBoard (1, 2) `shouldBe` [Just Black, Just Black]
 
-      it "counts white stones correctly" $ do
-        countStones testBoard (Just White) `shouldBe` 13
+  describe "countStones" $ do
+    it "counts black stones correctly" $ do
+      countStones testBoard (Just Black) `shouldBe` 11
 
-    let sampleSGFContent = unlines
-          [ "(;GM[1]FF[4]SZ[19]PT[Black]"
-          , "AB[aa][bb][cc]"
-          , "AW[dd][ee][ff]"
-          , ";B[aa];W[bb];B[cc];W[dd])"
-          ]
+    it "counts white stones correctly" $ do
+      countStones testBoard (Just White) `shouldBe` 13
 
-    describe "parseSGFMoves" $ do
-      it "parses moves from SGF content correctly" $ do
-        let expectedMoves = [ AddBlack (0, 0)
-                             , AddBlack (1, 1)
-                             , AddBlack (2, 2)
-                             , AddWhite (3, 3)
-                             , AddWhite (4, 4)
-                             , AddWhite (5, 5)
-                             , PlayBlack (0, 0)
-                             , PlayWhite (1, 1)
-                             , PlayBlack (2, 2)
-                             , PlayWhite (3, 3)
-                             ]
-        parseSGFMoves sampleSGFContent `shouldBe` expectedMoves
+  let sampleSGFContent = unlines
+        [ "(;GM[1]FF[4]SZ[19]PT[Black]"
+        , "AB[aa][bb][cc]"
+        , "AW[dd][ee][ff]"
+        , ";B[aa];W[bb];B[cc];W[dd])"
+        ]
 
-    describe "parseSgfProperties" $ do
-      it "parses properties from SGF content correctly" $ do
-        let expectedProperties = [ SetBoardSize 19
-                                 , SetPlayerTurn Black
-                                 ]
-        parseSgfProperties sampleSGFContent `shouldBe` expectedProperties
+  describe "parseSGFMoves" $ do
+    it "parses moves from SGF content correctly" $ do
+      let expectedMoves = [ AddBlack (0, 0)
+                           , AddBlack (1, 1)
+                           , AddBlack (2, 2)
+                           , AddWhite (3, 3)
+                           , AddWhite (4, 4)
+                           , AddWhite (5, 5)
+                           , PlayBlack (0, 0)
+                           , PlayWhite (1, 1)
+                           , PlayBlack (2, 2)
+                           , PlayWhite (3, 3)
+                           ]
+      parseSGFMoves sampleSGFContent `shouldBe` expectedMoves
 
-    describe "isEmptyBoard" $ do
-      it "checks if the board is empty" $ do
-        isEmptyBoard testBoard `shouldBe` False
+  describe "parseSgfProperties" $ do
+    it "parses properties from SGF content correctly" $ do
+      let expectedProperties = [ SetBoardSize 19
+                               , SetPlayerTurn Black
+                               ]
+      parseSgfProperties sampleSGFContent `shouldBe` expectedProperties
 
-    describe "emptyCoordinate" $ do
-      it "checks if the given coordinate on the board is empty" $ do
-        emptyCoordinate testBoard (4, 4) getStoneYX `shouldBe` False
+  describe "isEmptyBoard" $ do
+    it "checks if the board is empty" $ do
+      isEmptyBoard testBoard `shouldBe` False
 
-    describe "adjacentCoords" $ do
-      it "gets all the adjacent coordinates of the given coordinate" $ do
-        let expectedAdjacentCoords = [(2, 3), (3, 2), (3, 4), (4, 3)]
-        adjacentCoords testBoard (3, 3) `shouldBe` expectedAdjacentCoords
+  describe "emptyCoordinate" $ do
+    it "checks if the given coordinate on the board is empty" $ do
+      emptyCoordinate testBoard (4, 4) getStoneYX `shouldBe` False
 
-    describe "removeDuplicateGroups" $ do
-      it "removes duplicate nested lists" $ do
-        let groups = [[1, 4, 3], [2, 1, 3], [1, 3, 2], [4, 5, 6], [5, 6, 4]]
-        let expectedGroups = [[1, 4, 3]]
-        removeDuplicateGroups groups `shouldBe` expectedGroups
+  describe "adjacentCoords" $ do
+    it "gets all the adjacent coordinates of the given coordinate" $ do
+      let expectedAdjacentCoords = [(2, 3), (3, 2), (3, 4), (4, 3)]
+      adjacentCoords testBoard (3, 3) `shouldBe` expectedAdjacentCoords
 
-    describe "removeDuplicateStones" $ do
-      it "removes duplicate elements from a list" $ do
-        let stones = [1, 2, 3, 2, 1, 3, 4, 5, 6, 5, 6, 4]
-        let expectedStones = [1, 2, 3, 4, 5, 6]
-        removeDuplicateStones stones `shouldBe` expectedStones
+  describe "removeDuplicateGroups" $ do
+    it "removes duplicate nested lists" $ do
+      let groups = [[1, 4, 3], [2, 1, 3], [1, 3, 2], [4, 5, 6], [5, 6, 4]]
+      let expectedGroups = [[1, 4, 3]]
+      removeDuplicateGroups groups `shouldBe` expectedGroups
 
-    describe "removeDuplicateCoords" $ do
-      it "removes duplicate coordinates from a list" $ do
-        let coords = [(1, 2), (3, 4), (1, 2), (3, 4), (5, 6), (5, 6)]
-        let expectedCoords = [(1, 2), (3, 4), (5, 6)]
-        removeDuplicateCoords coords `shouldBe` expectedCoords
-        
+  describe "removeDuplicateStones" $ do
+    it "removes duplicate elements from a list" $ do
+      let stones = [1, 2, 3, 2, 1, 3, 4, 5, 6, 5, 6, 4]
+      let expectedStones = [1, 2, 3, 4, 5, 6]
+      removeDuplicateStones stones `shouldBe` expectedStones
+
+  describe "removeDuplicateCoords" $ do
+    it "removes duplicate coordinates from a list" $ do
+      let coords = [(1, 2), (3, 4), (1, 2), (3, 4), (5, 6), (5, 6)]
+      let expectedCoords = [(1, 2), (3, 4), (5, 6)]
+      removeDuplicateCoords coords `shouldBe` expectedCoords
+
 main :: IO ()
 main = hspecTests

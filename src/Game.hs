@@ -133,3 +133,4 @@ desiredScoringSystem = do
     Nothing -> do
       putStrLn "Invalid input, please enter either 1 or 2"
       desiredScoringSystem
+
