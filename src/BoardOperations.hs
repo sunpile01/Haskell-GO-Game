@@ -302,3 +302,26 @@ decideChampion gameState = do
     whiteTerritoryScore = fromIntegral (blackCaptured + whiteTerritory)
     blackAreaScore = fromIntegral (blackStones + blackTerritory)                -- Area score for each player
     whiteAreaScore = fromIntegral (whiteStones + whiteTerritory)
+
+
+
+
+-- | I did not end up using this code in the code that is used for the game. It is a fnctionality that could be implemented later
+-- Where for example the user wants to find out the liberties a group defined by a coordinate has.
+
+-- | Returns the number of liberties a group has
+countGroupLiberties :: Board -> [Coordinate] -> Int
+countGroupLiberties board group =
+  let adjacentCoordsList = concatMap (adjacentCoords board) group         -- Gets the adjacent coordinates of the group
+      emptyAdjacentCoords = filter (isNothing . getStoneYX board) adjacentCoordsList  -- Gets all the empty adjacent coordinates
+      uniqueEmptyAdjacentCoords = removeDuplicateCoords emptyAdjacentCoords           -- Removes the duplicate cooridnates
+  in length uniqueEmptyAdjacentCoords
+
+-- | Gets all the coordinates for the group of the correct color and the uses the CountGroupLiberties function to find
+-- the number of liberties the group has
+groupDegreesOfFreedom :: Board -> Coordinate -> Int
+groupDegreesOfFreedom board coord =
+  let stoneColor = if getStoneYX board coord == Just White then Just White else Just Black  -- Get the stoneColor
+      group = findGroupWrapper board stoneColor coord getStoneYX                            -- Get the group
+      groupLiberties = countGroupLiberties board group  -- Returns the number of adjacent empty coordinates to the group
+  in groupLiberties                                     -- The degrees of freedom the group has
