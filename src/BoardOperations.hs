@@ -269,3 +269,36 @@ adjacentStones board coord =
 -- | Count the number of stones on the board for each player
 countStones :: Board -> Maybe Stone -> Int
 countStones board stone = length $ filter (== stone) (concat board)  -- Filter all coordinates that are not equal to the given stone value
+
+-- | Counts the amount of unique groups of a given color on the board.
+countGroups :: Board -> Maybe Stone -> CInt -> Int
+countGroups board stone boardSize=
+  let uniqueGroups = allUniqueGroupsOfColor stone board boardSize     -- Get all the unique groups of that color
+      validGroups = filter (\group -> length group >= 2) uniqueGroups -- Makes sure there are atleast two stones in the group
+  in length validGroups                                               -- Length of the list of validgroups
+
+-- | Decides the winner of the game by calculating the scores of each player based on the chosen scoring method for the game.
+-- Then prints out the scoring mehtod used, the winner and the respective scores
+decideChampion :: GameState -> IO ()
+decideChampion gameState = do
+  let (blackScore, whiteScore) = case scoringMethod gameState of              -- Pattern matching against the scoringMethod data type
+        TerritoryScoring -> (blackTerritoryScore, whiteTerritoryScore + 6.5)  -- + 6.5 is the komi value of starting last
+        AreaScoring      -> (blackAreaScore, whiteAreaScore + 6.5)
+  -- Print the scoring method, points and winner
+  if scoringMethod gameState == TerritoryScoring then putStrLn "Scoring method used is Territoryscoring: " else
+    putStrLn "Scoring method used is Areascoring: "
+  putStrLn $ "  Black score: " ++ show blackScore
+  putStrLn $ "  White score: " ++ show whiteScore
+  putStrLn $ "  Winner: " ++ show (if blackScore > whiteScore then "Black" else "White")
+  where
+    board = currBoard gameState
+    blackCaptured = length $ filter (== Just Black) (capturedStones gameState)  -- The amount of black stones in the capturedStones variable stored in gameState
+    whiteCaptured = length $ filter (== Just White) (capturedStones gameState)  -- Same just for white
+    blackStones = countStones board (Just Black)                                       -- Counts the amount of stones of a given color
+    whiteStones = countStones board (Just White)
+    blackTerritory = countTerritory board (Just Black) (sizeBoard gameState)           -- Calculate the territory of each player
+    whiteTerritory = countTerritory board (Just White) (sizeBoard gameState)
+    blackTerritoryScore = fromIntegral (whiteCaptured + blackTerritory)         -- Territory score for each player
+    whiteTerritoryScore = fromIntegral (blackCaptured + whiteTerritory)
+    blackAreaScore = fromIntegral (blackStones + blackTerritory)                -- Area score for each player
+    whiteAreaScore = fromIntegral (whiteStones + whiteTerritory)
