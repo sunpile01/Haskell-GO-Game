@@ -165,3 +165,13 @@ getStoneYX board (x,y) = board !! y !! x
 -- | Needed this for all that worked with capturing stones
 getStoneXY :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
 getStoneXY board (x,y) = board !! x !! y
+
+-- | Get the stones adjacent to a coordinate. Could also have used adjacentCoords in the isTerritory,
+-- but felt like it was easier to read when i created this adjacentStones function instead.
+adjacentStones :: Board -> Coordinate -> [Maybe Stone]
+adjacentStones board coord =
+  filter isJust (map (getStoneYX board) (adjacentCoords board coord))
+  
+-- | Count the number of stones on the board for each player
+countStones :: Board -> Maybe Stone -> Int
+countStones board stone = length $ filter (== stone) (concat board)  -- Filter all coordinates that are not equal to the given stone value
