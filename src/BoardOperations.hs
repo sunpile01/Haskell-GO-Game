@@ -120,3 +120,19 @@ findGroupsForStones stone board (coord:coords) =    -- recursive case when input
      remainingStones = coords \\ group                         -- Removes the stones in the current group based on the list of coords
  in group : findGroupsForStones stone board remainingStones    -- group is concatenated to the result,
                                                                -- processes the remaining stones recursively
+
+-- | Updates the coordinate with a new stone value
+updateStones :: Board -> Maybe Stone -> Coordinate -> [[Maybe Stone]]
+updateStones board stone (x, y) =
+  let (beforeRow, row:afterRow) = splitAt x board -- Splits the 2D list into two three parts, one before x one at x and one after x
+      (beforeCol, _:afterCol) = splitAt y row     -- This splits the row part from above into 3 parts one before y one at y and one after y
+      newRow = beforeCol ++ [stone] ++ afterCol   -- creates the new row by adding the beforeCol from above the new stone value and the afterCol from above
+  in beforeRow ++ [newRow] ++ afterRow            -- The updated 2D list with the newly created row containing the new stone value
+
+-- | Used this for everything that had to do with getting stones from a coordinate
+getStoneYX :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
+getStoneYX board (x,y) = board !! y !! x
+
+-- | Needed this for all that worked with capturing stones
+getStoneXY :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
+getStoneXY board (x,y) = board !! x !! y
