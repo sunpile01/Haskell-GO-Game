@@ -116,6 +116,6 @@ hspecTests = hspec $ do
         , [Just White,   Just Black, Nothing,    Just White, Just Black,   Nothing   ]
         , [Nothing,      Just White, Just White, Just Black, Just Black,   Just White]
         , [Just White,   Just Black, Just Black, Nothing,    Just White,   Nothing   ]]
-  
+
 main :: IO ()
 main = hspecTests

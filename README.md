@@ -1,92 +1,148 @@
-# Assignment-1
+# prog2006-assignment-1
+
+## How to build and run the project
+
+### You need to have these already installed
+* GHC with stack
+* SDL2
+* SDL2-ttf
+* SDL2-dev
+
+### How to run the program
+You first need to clone this git repository onto your computer using "git clone 'repository link'". The repository link is found by clicking the 
+Clone button in the gitlab repository for this project and then copy the https link. Then you need to move to the root directory of the project
+and then to both build and run the project use the command Stack run:
+````Stack run````
+### Important notice
+The Program as it is right now will crash if you try to run the program using 'Stack run' and the sgfFile is not in place
+There is already a sample sgf file in the project structure, feel free to add moves, or change the size of the board as you wish. 
+Right now the only way to change the size of the board is through using the sgf file and changing the number in the "SZ[]" field.
+
+### How to play the game
+For placing a stone on the board you simply use the mouse and click on the square where you want to place the stone. One simplification I have
+used is that the stone is placed in the middle of the square and not on the intersections between the squares, like it is in the standard GO game.
+The stones palced will alternate between black and white. You can read the rules of the game and how it works here: https://en.wikipedia.org/wiki/Go_(game)
+I have implemented: captures, ko-rule (not allowing duplicate bord states), komi for white player, suicide moves are not allowed and there is a scoring system
+that can be changed between: Areascoring and TerritoryScoring (Tried to let the user decide at the start of the game, but it did not work, must be changed manually, in the mainApp funciton)
+
+## Project Structure
+![img.png](img.png)
+
+## Requirements Specification
+### Mandatory requirements by the User: The program must be able to:
+* Visualize the game board for the user with the stones 
+* Update the board with the new stones for each move (alernating color)
+* Correctly capture any groups or stones that do not have any liberties
+* Never allow Illegal moves such as (Placing on an opponent stone and suicide moves)
+* Load the board state from an SGF File
+* Keep track of the game state
+* Black Stone should make the first move (excpetion if it played last in the SGF file)
+* Not crash unintentionally 
+
+### Requirements that should be implemented to improve the game:
+* Let the user place the stones using the mouse (not command line)
+* The interface should be resizable
+* Allow the user to pass their turn
+* Have an undo function, so the user can revert to the previous board state
+* The Board and stones should have textures
+* Have a scoring system for the game and decide the winner when both players pass
+* Enforce the Ko Rule
+* Have options to make computer generated moves such as eliminate most amount of stones
+* Be able to determine of two board states are isomorphic
+
+### Requirement assumptions by the developer:
+* The drag and drop feature must not be implemented and clicking on the desired board coordinate is sufficient
+* The stones can be rendered using only SDL and not textures using SDL-Image
+* The stones do not have to be perfectly round 
+* The coordinate system will be implemented with (0,0) being the top left corner
+* The Path to the sgf file will be provided and the user must change the existing sgf file
+* The stones must not be placed at the intersections of the board lines, but can be placed at the center of the squares
+* The computer generated moves will use exhaustive search patterns to find the best moves.
+
+## Non-Functional Requirements
+1. Usability:
+    * It should be intuitive and easy for the user to use the applications features. 
+2. Performance:
+    * The program should react quickly to user actions, not be slow and hard to interact with and have low response times
+    * The program should not use a large load of the users CPU power and memory space
+3. Security:
+    * The program should not introduce any security risks for the user
+4. Maintainability:
+    * The codebase should be easy to maintain by having:
+    * Well commented functions.
+    * Good modularity to navigate the codebase easy
+    * Documents explaining key components of the program
+5. Compatability:
+    * The program should be able to operate regardless of what operating system you are using, as long as you have the correct installations (For example GHC and SDL for this project)
+6. Scalability: 
+    * The program Should be structured such that it is easy to implement new features and scale the project.
+
+
+## Self-Assessment
+
+### Non-funcitonal Requirements
+1. Usability:
+    * The application is easy and intuitive to use and provides a UI, so the user knows the available options
+2. Performance:
+    * The program responds quickly to mouse interactions, however it can be slow with the computer generated moves because they utilize exhaustive searches.
+    * Useing the key features of the program does not provide any problems for the CPU or memory capacity. However, as stated above the computer generated moves can cause trouble in regrads to performance 
+3. Security:
+    * The program does not introduce any security issues to the users computer
+4. Maintainability:
+    * The codebase:
+    * Has well commented functions
+    * Divides the code into logical parts that belongs together, so it is easier to navigate
+    * Has a readme file with documentation for the project
+5. Compatability:
+    * The program can be run on different operating systems as long as the required installations are present on the users computer
+6. Scalability:
+    * The data types for this program could have been structured and refactored even better such that the code would be easier to scale
+
+### Functional requirements:
+The program has all implemnted all the "must have" features listed in the requirement specification:
+- [x] Visualize the game board for the user with the stones
+- [x] Update the board with the new stones for each move (alernating color)
+- [x] Correctly capture any groups or stones that do not have any liberties
+- [x] Never allow Illegal moves such as (Placing on an opponent stone and suicide moves)
+- [x] Load the board state from an SGF File
+- [x] Keep track of the game state
+- [x] Black Stone should make the first move (excpetion if it played last in the SGF file)
+- [x] Not crash unintentionally 
+
+The features implemented in the requirements that would "improve the program":
+- [x] Let the user place the stones using the mouse (not command line)
+- [ ] The interface should be resizable
+- [x] Allow the user to pass their turn
+- [x] Have an undo function, so the user can revert to the previous board state
+- [ ] The Board and stones should have textures
+- [x] Have a scoring system for the game and decide the winner when both players pass
+- [x] Enforce the Ko Rule
+- [x] Have options to make computer generated moves such as eliminate most amount of stones
+- [ ] Be able to determine of two board states are isomorphic
+
+### Reflection
+
+First I have to address the elephant in the room. When working on this project I completely forgot to use the git repository 
+in my workspace. This is a BIG issue and should not have happened, I know this makes the project 
+look very unprofessional, and I am very mad at myself for forgetting this. Specially since I did this very professionally in 
+the Graphics course last semester. I tried to simulate how the commits roughly could have looked like, but they were as said, 
+done after the program was actually written. 
+
+This project was very time-consuming for me. This was a result of the functional style of Haskell being very different from the 
+programming languages I was familiar with. Additionally, I spent a lot of time getting everything with SDL to work. I tried so many times
+to get the SDL-Image to work, but it simply would not work for me. Therefore, I had to draw the circles using SDL and could not use textures
+for my program.
+
+The code for filling the stones with color only using SDL and not textures from SDL-Image, proved to be a real challenge. I struggled a lot and
+was not able to do it entirely on my own. I needed to get the visual representation of the stone completed because it helps a lot when testing the
+program. I ended up asking ChatGPT to help me implement this code. It never gave me fully working code that adhered to my implementation, but it helped
+me understand how it could be implemented, using this help I was able to implement the code for filling a circle.
+
+I am quite pleased with the end result of the actual program and the functionalities it has. On the other side the data structures I use for my 
+game are not optimal. This should have been refactored earlier, and as a consequence it is harder to expand the program with implementing new
+functionalities. This is because a lot more parameters have to be passed around, when I do not have a 'World' datatype. The way I am handling 
+events works fine as of now because there are not so many, but it is not very idiomatic, and would probably need refactoring if many more 
+events were needed. I Will definitely look to improve these two points for the portfolio delivery.
 
 
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://git.gvk.idi.ntnu.no/course/prog2006/prog2006-2023-workspace/aleksolh/assignment-1.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://git.gvk.idi.ntnu.no/course/prog2006/prog2006-2023-workspace/aleksolh/assignment-1/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
