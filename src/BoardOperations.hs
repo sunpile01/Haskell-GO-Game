@@ -3,8 +3,8 @@ module BoardOperations (
   countTerritory,
   countStones,
   countGroups,
-  decideChampion,
-  placeStone,
+  decideChampion,               -- Alot more functions are exposed than what is necessary to run the program
+  placeStone,                   -- The reason I have done this is so I can test each individual function in the Spec.hs file
   captureStones,
   bestMoveForCapture,
   bestMoveForConnectGroups,
@@ -17,7 +17,6 @@ module BoardOperations (
   getStoneXY,
   validMove,
   adjacentStones,
-  
 ) where 
   
 import DataTypes
