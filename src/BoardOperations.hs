@@ -68,6 +68,18 @@ placeStone (Move stone (x,y)) oldBoard =
       newBoard = take y oldBoard ++ [newRow] ++ drop (y +1) oldBoard  -- Replacing the old row with the new row for the updateBoard
   in newBoard
 
+-- | Handles the different keypresses for the different computer generated moves available and then calls the 'updateGameComputerMove' function
+-- with the correct 'ComputerMove' type
+handleKeyPress :: GameState -> SDL.Event -> GameState
+handleKeyPress gameState (SDL.Event _ (SDL.KeyboardEvent keyboardEvent))
+  | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeE =
+    updateGameComputerMove gameState MostEliminated
+  | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeL =
+    updateGameComputerMove gameState ExtendLiberties
+  | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeC =
+      updateGameComputerMove gameState ConnectGroups
+handleKeyPress gameState _ = gameState
+
 -- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
 -- Every condition must be satisfied for the move to be valid.
 validMove :: Board -> Board -> Maybe Stone -> Coordinate -> Bool
@@ -171,7 +183,7 @@ getStoneXY board (x,y) = board !! x !! y
 adjacentStones :: Board -> Coordinate -> [Maybe Stone]
 adjacentStones board coord =
   filter isJust (map (getStoneYX board) (adjacentCoords board coord))
-  
+
 -- | Count the number of stones on the board for each player
 countStones :: Board -> Maybe Stone -> Int
 countStones board stone = length $ filter (== stone) (concat board)  -- Filter all coordinates that are not equal to the given stone value
