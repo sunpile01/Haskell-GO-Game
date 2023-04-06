@@ -122,6 +122,46 @@ bestMoveForLiberties gameState = findBestMove gameState mapper
     currentPlayer = playerTurn gameState
     mapper coord = groupLibertiesFromCoord (placeStone (Move currentPlayer coord) (currBoard gameState)) currentPlayer coord
 
+-- | The coordinate of the move that will connect the most amount of groups for the given color.
+-- Would be cool if it took into account the amount of liberties the connected groups would make, but I have not had time to implement this yet.
+-- Same concept as bestMoveForCapture but this function utilizes the numGroupsConnectedByMove as the mapper function
+bestMoveForConnectGroups :: GameState -> Maybe Coordinate
+bestMoveForConnectGroups gameState = findBestMove gameState mapper
+  where
+    currentPlayer = playerTurn gameState
+    mapper coord = numGroupsConnectedByMove (currBoard gameState) currentPlayer coord
+
+-- | Find the amount of liberties the group with the given coordinate has
+groupLibertiesFromCoord :: Board -> Maybe Stone -> Coordinate -> Int
+groupLibertiesFromCoord board stone coord =
+  let group = findGroupWrapper board stone coord getStoneYX -- Finds the group of the coordinate
+      liberties = countGroupLiberties board group           -- Get the number of liberties of the group
+  in liberties
+
+-- | Checks if placing a stone at the given coordinate would connect two or more groups
+numGroupsConnectedByMove :: Board -> Maybe Stone -> Coordinate -> Int
+numGroupsConnectedByMove board stone coord =
+  let adjacentCoordinates = filter (\c -> getStoneYX board c == stone) (adjacentCoords board coord) -- Only adjacent coordinates of the same color
+      adjacentGroups = map (\c -> findGroupWrapper board stone c getStoneYX) adjacentCoordinates    -- Finds the adjacent groups
+      uniqueAdjacentGroups = removeDuplicateGroups adjacentGroups                                   -- Removes potential duplicate groups
+      connectedGroups = if length uniqueAdjacentGroups >= 2 then length uniqueAdjacentGroups else 0 -- If number of groups is greater than 2
+  in connectedGroups
+
+
+
+-- | Finds the coordinate that evaluates to the best move by using the mapper function sent as a paramteter
+findBestMove :: GameState -> (Coordinate -> Int) -> Maybe Coordinate
+findBestMove gameState mapper = do
+  let currentPlayer = playerTurn gameState
+      allCoordinates = getAllCoordinates      -- Get all coordinates since we will perform an exhaustive search
+      -- Remove all none valid coordinates
+      validCoordinates = filter (validMove (currBoard gameState) (prevBoard gameState) currentPlayer) (allCoordinates (sizeBoard gameState))
+      -- Creates tuples with the potential coordinate and the integer which is the 'value' of that move (higher = better), mapper is a funtion sent as a parameter
+      moves = map (\coord -> (coord, mapper coord)) validCoordinates
+  if null moves then Nothing else Just (fst (maximumBy (comparing snd) moves)) -- Finds the coordinate with the highest corresponding integer value and returns it
+
+
+
 -- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
 -- Every condition must be satisfied for the move to be valid.
 validMove :: Board -> Board -> Maybe Stone -> Coordinate -> Bool
