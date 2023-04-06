@@ -80,6 +80,48 @@ handleKeyPress gameState (SDL.Event _ (SDL.KeyboardEvent keyboardEvent))
       updateGameComputerMove gameState ConnectGroups
 handleKeyPress gameState _ = gameState
 
+- | Places the computer move on the board by pattern matching the type of ComputerMove and then executing the appropriate function
+-- Then updates the game state with the new board created by the computer move and all the properties of the game state that need to
+-- updated after every move
+updateGameComputerMove :: GameState -> ComputerMove -> GameState
+updateGameComputerMove gameState computerMove =
+  let stone = if playerTurn gameState == Just Black then Just Black else Just White -- Gets the stone color of the player that to place the move for
+      nextTurnStone = if stone == Just Black then Just White else Just Black        -- Stone to be placed the next turn
+      previousBoard = currBoard gameState
+      twoTurnsAgoBoard = if isEmptyBoard (prevBoard gameState) then [] else prevBoard gameState -- Get the board two turns in the past
+      -- Pattern matches the ComputerMove type and executes the appropriate function depending on the type
+      bestMoveCoord = case computerMove of
+        MostEliminated -> bestMoveForCapture gameState              -- Computer move to capture most opponent stones
+        ExtendLiberties -> bestMoveForLiberties gameState           -- Computer move that increases the liberties of a group the most
+        ConnectGroups -> bestMoveForConnectGroups gameState         -- Computer move that connects the most amount of equal colored groups
+  in if isJust bestMoveCoord && validMove (currBoard gameState) twoTurnsAgoBoard stone (fromJust bestMoveCoord) &&
+                                                            isValidCoord (currBoard gameState) (fromJust bestMoveCoord)
+     then let move = Move stone (fromJust bestMoveCoord)          -- If the move is valid as checked above then create the move and
+              -- Update the gameState with all the variables we defined earlier that is needed in GameState and place the latest move
+              updatedBoard = GameState (placeStone move (currBoard gameState)) previousBoard twoTurnsAgoBoard (capturedStones gameState) (scoringMethod gameState) nextTurnStone (sizeBoard gameState)
+              boardWCaptures = captureStones updatedBoard stone  -- Updates gameState by removing captured stones and adds newly captured stones
+          in boardWCaptures                                      -- Final gameState that the function returns
+     else gameState                                              -- If move was not valid return the old gameState
+
+-- | The coordinate of the move that will capture the most amount of enemy stones
+-- One note here is that all the bestMoves function were almost identical and only used a different function for generating the
+-- tuple with coordinates and then the integer value for that coordinate (for example amount of captured stones or amount of libeties)
+-- Therefore i created the bestMove function that just uses different mapper functions
+bestMoveForCapture :: GameState -> Maybe Coordinate
+bestMoveForCapture gameState = findBestMove gameState mapper  -- The mapper function is sent to the bestMove function
+  where
+    currentPlayer = playerTurn gameState                  -- Stone color of the current player
+    -- mapper is a function that takes a coord as parameter, and returns the amount of captured stones by calling the captureStones with a simulated move
+    mapper coord = length (capturedStones (captureStones (gameState { currBoard = placeStone (Move currentPlayer coord) (currBoard gameState) }) currentPlayer))
+
+-- | The coordinate of the move that will extend the liberties of a group of the given color the most
+-- Same concept as bestMoveForCapture but this function utilizes the groupLibertiesFromCoord as the mapper function
+bestMoveForLiberties :: GameState -> Maybe Coordinate
+bestMoveForLiberties gameState = findBestMove gameState mapper
+  where
+    currentPlayer = playerTurn gameState
+    mapper coord = groupLibertiesFromCoord (placeStone (Move currentPlayer coord) (currBoard gameState)) currentPlayer coord
+
 -- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
 -- Every condition must be satisfied for the move to be valid.
 validMove :: Board -> Board -> Maybe Stone -> Coordinate -> Bool
