@@ -114,4 +114,22 @@ initializeSDL = do
   SDL.HintRenderScaleQuality SDL.$= SDL.ScaleLinear
   Font.initialize
 
-
+-- | Prompts the user for what scoring method they wish to use for their game
+-- For some reason the program crashes everytime i try to use getLine and gives me this error:
+-- <stdin>: hGetLine: invalid argument (Bad file descriptor)
+-- So this funcitonality is not used actually implemented right now
+desiredScoringSystem :: IO Integer
+desiredScoringSystem = do
+  putStrLn "Choose a scoring method:"
+  putStrLn "Enter '1' for Territory Scoring"
+  putStrLn "Enter '2' for Area Scoring"
+  input <- getLine
+  case readMaybe input :: Maybe Int of
+    Just 1 -> return 1
+    Just 2 -> return 2
+    Just _ -> do
+      putStrLn "Invalid input, please enter either 1 or 2"
+      desiredScoringSystem
+    Nothing -> do
+      putStrLn "Invalid input, please enter either 1 or 2"
+      desiredScoringSystem

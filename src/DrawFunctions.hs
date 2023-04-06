@@ -102,4 +102,3 @@ drawInterface r gameState window = do
   drawText r font2 (pack $ show $ countGroups (currBoard gameState) (Just Black) (sizeBoard gameState)) (450,windowHeigth - 150)
   drawText r font2 (pack $ show $ countTerritory (currBoard gameState) (Just Black) (sizeBoard gameState)) (450,windowHeigth - 100)
   drawText r font2 (pack $ show $ length $ filter (== Just White) (capturedStones gameState)) (450,windowHeigth - 50)
- 
