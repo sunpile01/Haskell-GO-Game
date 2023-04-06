@@ -68,6 +68,35 @@ placeStone (Move stone (x,y)) oldBoard =
       newBoard = take y oldBoard ++ [newRow] ++ drop (y +1) oldBoard  -- Replacing the old row with the new row for the updateBoard
   in newBoard
 
+-- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
+-- Every condition must be satisfied for the move to be valid.
+validMove :: Board -> Board -> Maybe Stone -> Coordinate -> Bool
+validMove currBoard twoTurnsAgoBoard stone coord =
+     isEmptyPosition currBoard coord &&                        -- Checks if there is a stone on the coordinate for the stone to be placed
+     not (isKOMove currBoard twoTurnsAgoBoard coord stone) &&  -- Checks if the move would create KO (repeating board state two turns ago)
+     not (isSuicideMove currBoard stone coord)                 -- Checks if the move would result in the stone having no liberties and not captureing a stone
+
+-- | Checks if there is a stone on the coordinate for the stone to be placed
+isEmptyPosition :: Board -> Coordinate -> Bool
+isEmptyPosition board coord = isNothing (getStoneYX board coord)
+
+-- | Checks if the move would result in the stone having no liberties and not capturing an opponent stone
+isSuicideMove :: Board -> Maybe Stone -> Coordinate -> Bool
+isSuicideMove board stone coord =
+  let tempBoard = placeStone (Move stone coord) board           -- Simulate the placement of the stone
+      -- If Placement connects the stone to one or more equal color stones 'group' is all those coordinates, if not group is just the same coordinate
+      group = findGroupWrapper tempBoard stone coord getStoneYX
+      -- If the group (can be one stone) has no liberties and the move does not result in any captures then it is a suicide move
+  in not (groupHasLiberties tempBoard group getStoneYX) && null (capturedStones (captureStones (GameState tempBoard board [] [] TerritoryScoring Nothing 0) stone))
+
+-- | Checks if the move would create KO (repeating board state two turns ago)
+isKOMove :: Board -> Board -> Coordinate -> Maybe Stone -> Bool
+isKOMove currentBoard twoTurnsAgoBoard coord stone =
+  let tempBoard = placeStone (Move stone coord) currentBoard  -- Simulate placing the stone on the board
+      tempBoardCaptures = captureStones (GameState tempBoard [] [] [] TerritoryScoring Nothing 0) stone -- Simulate stones potentially being captured
+  in currBoard tempBoardCaptures == twoTurnsAgoBoard        -- If the simulated stone placing results in the same board state two turns ago it is a KO move
+
+
 -- | Uses recursion and a list of already visited coordinates to find all stones in the group.
 -- A group is same colored stones that is vertically or horizontally adjacent.
 findGroup :: Board -> Maybe Stone -> Coordinate -> [Coordinate] -> (Board -> Coordinate -> Maybe Stone) -> [Coordinate]
