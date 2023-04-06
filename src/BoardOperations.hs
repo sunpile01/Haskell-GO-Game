@@ -85,3 +85,38 @@ findGroup board stone coord@(x, y) visited getStoneFunc
 -- | Wrapper function for the findGroup function that adds the initial empty list of visited stones
 findGroupWrapper :: Board -> Maybe Stone -> Coordinate -> (Board -> Coordinate -> Maybe Stone) -> [Coordinate]
 findGroupWrapper board stone coord getStoneFunc = findGroup board stone coord [] getStoneFunc
+
+-- | Checks if a group has liberties, checks if each point adjacent to the group is empty, if 'any' of them are then
+--  the group has liberties
+groupHasLiberties :: Board -> [Coordinate] -> (Board -> Coordinate -> Maybe Stone) -> Bool
+-- concatMap generates all the adjacent coordinates to the group, then the lambda function checks all those adjacent coordinates generated.
+groupHasLiberties board group getStoneFunc = any (\coord -> emptyCoordinate board coord getStoneFunc) (concatMap (adjacentCoords board) group)
+
+-- | Function that checks if any stones or groups of stones on the board has 0 liberties, if they have 0 liberties the stone is captured
+-- and the stone value is replaced by 'Nothing' the color of the stone is added to the captured coordinates
+captureStones :: GameState -> Maybe Stone -> GameState
+captureStones board stone = board { currBoard = newStones, capturedStones = newCapturedStones } -- Updating the game state after capture
+  where
+    opponent = if stone == Just Black then Just White else Just Black   -- Opponent stone color
+    uniqueOpponentGroups = allUniqueGroupsOfColor opponent (currBoard board) (sizeBoard board)  -- All the unique opponent groups (can be a single stone)
+    -- Gets all the groups that has no liberties, this is a list of [[Coordinate]] because it is a list og groups
+    capturedGroups = filter (\group -> not (groupHasLiberties (currBoard board) group getStoneXY)) uniqueOpponentGroups
+    stonesCaptured = concat capturedGroups   -- Here we flatten the [[Coordinate]] list into a list of [Coordinate]
+    newStones = foldl (`updateStones` Nothing) (currBoard board) stonesCaptured -- Updates the board with 'Nothing' for the capturedStones
+     -- Adds the captured stones to the list of already captured stones as Stone color instead of the Coordinate
+    newCapturedStones = capturedStones board ++ map (\_ -> opponent) stonesCaptured
+
+-- | Gets all the unique groups of a single color on the board
+allUniqueGroupsOfColor :: Maybe Stone -> Board -> CInt -> [[Coordinate]]
+allUniqueGroupsOfColor stone board boardSize = findGroupsForStones stone board colorStones
+  where
+    allCoordinates = getAllCoordinates    -- All coordinates on the board
+    colorStones = filter (\c -> getStoneXY board c == stone) (allCoordinates boardSize) -- Only coordinates with the given stone color
+
+findGroupsForStones :: Maybe Stone -> Board -> [Coordinate] -> [[Coordinate]]
+findGroupsForStones _ _ []  = []
+findGroupsForStones stone board (coord:coords) =    -- recursive case when input list has atleast one coordinate
+ let group = findGroupWrapper board stone coord getStoneXY     -- calls findGoupWrapper to find the group of adjacent stones of the same color
+     remainingStones = coords \\ group                         -- Removes the stones in the current group based on the list of coords
+ in group : findGroupsForStones stone board remainingStones    -- group is concatenated to the result,
+                                                               -- processes the remaining stones recursively
