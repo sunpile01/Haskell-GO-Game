@@ -54,3 +54,52 @@ fillCircle renderer (SDL.P (SDL.V2 cx cy)) radius = do
   forM_ [cy - radius .. cy + radius] $ \y ->
     forM_ [cx - radius .. cx + radius] $ \x -> do
       when (circleCheck x y) $ SDL.drawPoint renderer (SDL.P (SDL.V2 x y))
+
+-- | Renders the text sent as a parameter with the given font to the screen
+drawText :: SDL.Renderer -> SDL.Font.Font -> Text -> (Int, Int) -> IO ()
+drawText renderer font text (x, y) = do
+    textSurface <- SDL.Font.solid font (SDL.V4 255 255 255 0) text    -- Creates a text surface with given font text and color
+    surface <- SDL.createTextureFromSurface renderer textSurface      -- creates a texture from the texutre surface
+    info <- SDL.queryTexture surface                                  -- gets the width and heigth of the texture
+    let w = SDL.textureWidth info
+    let h = SDL.textureHeight info
+    SDL.copy renderer surface Nothing (Just $ SDL.Rectangle (SDL.P (SDL.V2 (fromIntegral x) (fromIntegral y))) (SDL.V2 w h)) --renders the texture
+    SDL.freeSurface textSurface
+    SDL.destroyTexture surface
+
+-- | Draws text to help the user know what commands they have available. It also draws text that provides the user with
+-- some information about the game state.
+drawInterface :: SDL.Renderer -> GameState -> SDL.Window -> IO ()
+drawInterface r gameState window = do
+  (SDL.V2 windowWidthIntegral windowHeigthIntegral) <- SDL.glGetDrawableSize window -- Window height and width
+  let windowWidth = fromIntegral windowWidthIntegral :: Int
+      windowHeigth = fromIntegral windowHeigthIntegral :: Int
+      fontSize = (windowWidth * 3) `div` 100                                        -- Font size changes based on window size
+      fontSize2 = (windowWidth * 2) `div` 100
+      p1 = windowWidth - 250
+  font <- SDL.Font.load "./ttf/roboto/Roboto-Bold.ttf" fontSize
+
+  -- The keyboard shortcuts the user have available for doing different actions:
+  drawText r font "Q - Quit" (p1,50)
+  drawText r font "E - Eliminates stones" (p1, 100)
+  drawText r font "L - extends liberties" (p1, 150)
+  drawText r font "C - connects stones" (p1, 200)
+  drawText r font "S - skip turn" (p1, 250)
+  drawText r font "Z - undo last move" (p1, 300)
+
+  font2 <- SDL.Font.load  "./ttf/roboto/Roboto-Bold.ttf" fontSize2
+
+  -- Shows some basic informaiton about the current state of the game:
+  drawText r font2 "Current player to place a stone is: " (p1 - 400, 500)
+  drawText r font2 (pack $ show $ if playerTurn gameState == Just Black then Black else White) (p1 -150 , 500)
+
+  drawText r font2 "White Groups, territories and captured stones:" (50 , windowHeigth - 200)
+  drawText r font2 (pack $ show $ countGroups (currBoard gameState) (Just White) (sizeBoard gameState)) (100,windowHeigth - 150)
+  drawText r font2 (pack $ show $ countTerritory (currBoard gameState) (Just White) (sizeBoard gameState)) (100,windowHeigth - 100)
+  drawText r font2 (pack $ show $ length $ filter (== Just Black) (capturedStones gameState)) (100,windowHeigth - 50)
+
+  drawText r font2 "Black Groups, territories and captured stones:" (400,windowHeigth - 200)
+  drawText r font2 (pack $ show $ countGroups (currBoard gameState) (Just Black) (sizeBoard gameState)) (450,windowHeigth - 150)
+  drawText r font2 (pack $ show $ countTerritory (currBoard gameState) (Just Black) (sizeBoard gameState)) (450,windowHeigth - 100)
+  drawText r font2 (pack $ show $ length $ filter (== Just White) (capturedStones gameState)) (450,windowHeigth - 50)
+ 
