@@ -58,3 +58,30 @@ handleMouseClick gameState (SDL.Event _ (SDL.MouseButtonEvent mouseButtonEventDa
            in boardWCaptures                                                  -- Final updated game state
      else gameState                                                           -- Move not valid return the old gameState
 handleMouseClick gameState _ = gameState
+
+-- | Updates the specified position on the board with the given stone. Haskell lists are immutable,
+-- so it is necessary to create a new list as the return value with the updated row
+placeStone :: Move -> Board -> Board
+placeStone (Move stone (x,y)) oldBoard =
+  let row = oldBoard !! y                 -- Get the row to be updated
+      newRow = take x row ++ [stone] ++ drop (x+1) row -- New row with the updated value for the coordinate
+      newBoard = take y oldBoard ++ [newRow] ++ drop (y +1) oldBoard  -- Replacing the old row with the new row for the updateBoard
+  in newBoard
+
+-- | Uses recursion and a list of already visited coordinates to find all stones in the group.
+-- A group is same colored stones that is vertically or horizontally adjacent.
+findGroup :: Board -> Maybe Stone -> Coordinate -> [Coordinate] -> (Board -> Coordinate -> Maybe Stone) -> [Coordinate]
+findGroup board stone coord@(x, y) visited getStoneFunc
+  | getStoneFunc board coord /= stone = []    -- Stone at the the current coordinate is not the same as the group
+  | coord `elem` visited = []                 -- The current coordinate has already been visited
+  | otherwise =                               -- Coordinate has not been visited already
+      let newVisited = coord : visited        -- add it to the visited list
+          neighbors = adjacentCoords board (x,y)    -- Get the neighbor coordinates for the current coordinate
+          unvisitedNeighbors = filter (`notElem` newVisited) neighbors    -- Filter out the already visited ones
+          sameColorNeighbors = filter (\c -> getStoneFunc board c == stone) unvisitedNeighbors  -- Filter out those of opposite color
+         -- concatenate the coordinate to the list and then recursively call this function for the same colored neighbors with updated visited list
+      in coord : concatMap (\c -> findGroup board stone c newVisited getStoneFunc) sameColorNeighbors
+
+-- | Wrapper function for the findGroup function that adds the initial empty list of visited stones
+findGroupWrapper :: Board -> Maybe Stone -> Coordinate -> (Board -> Coordinate -> Maybe Stone) -> [Coordinate]
+findGroupWrapper board stone coord getStoneFunc = findGroup board stone coord [] getStoneFunc
