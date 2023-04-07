@@ -224,7 +224,7 @@ captureStones board stone = board { currBoard = newStones, capturedStones = newC
     stonesCaptured = concat capturedGroups   -- Here we flatten the [[Coordinate]] list into a list of [Coordinate]
     newStones = foldl (`updateStones` Nothing) (currBoard board) stonesCaptured -- Updates the board with 'Nothing' for the capturedStones
      -- Adds the captured stones to the list of already captured stones as Stone color instead of the Coordinate
-    newCapturedStones = capturedStones board ++ map (\_ -> opponent) stonesCaptured
+    newCapturedStones = capturedStones board ++ map (const opponent) stonesCaptured
 
 -- | Gets all the unique groups of a single color on the board
 allUniqueGroupsOfColor :: Maybe Stone -> Board -> CInt -> [[Coordinate]]
@@ -242,7 +242,7 @@ findGroupsForStones stone board (coord:coords) =    -- recursive case when input
                                                                -- processes the remaining stones recursively
 
 -- | Updates the coordinate with a new stone value
-updateStones :: Board -> Maybe Stone -> Coordinate -> [[Maybe Stone]]
+updateStones :: Board -> Maybe Stone -> Coordinate -> Board
 updateStones board stone (x, y) =
   let (beforeRow, row:afterRow) = splitAt x board -- Splits the 2D list into two three parts, one before x one at x and one after x
       (beforeCol, _:afterCol) = splitAt y row     -- This splits the row part from above into 3 parts one before y one at y and one after y
@@ -250,11 +250,11 @@ updateStones board stone (x, y) =
   in beforeRow ++ [newRow] ++ afterRow            -- The updated 2D list with the newly created row containing the new stone value
 
 -- | Used this for everything that had to do with getting stones from a coordinate
-getStoneYX :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
+getStoneYX :: Board -> Coordinate -> Maybe Stone
 getStoneYX board (x,y) = board !! y !! x
 
 -- | Needed this for all that worked with capturing stones
-getStoneXY :: [[Maybe Stone]] -> Coordinate -> Maybe Stone
+getStoneXY :: Board -> Coordinate -> Maybe Stone
 getStoneXY board (x,y) = board !! x !! y
 
 -- | Counts all the coordinates that is a territory of a certain player and returns the integer number
