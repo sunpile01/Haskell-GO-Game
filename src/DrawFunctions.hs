@@ -56,7 +56,7 @@ fillCircle renderer (SDL.P (SDL.V2 cx cy)) radius = do
       when (circleCheck x y) $ SDL.drawPoint renderer (SDL.P (SDL.V2 x y))
 
 -- | Renders the text sent as a parameter with the given font to the screen
-drawText :: SDL.Renderer -> SDL.Font.Font -> Text -> (Int, Int) -> IO ()
+drawText :: SDL.Renderer -> SDL.Font.Font -> Text -> Coordinate -> IO ()
 drawText renderer font text (x, y) = do
     textSurface <- SDL.Font.solid font (SDL.V4 255 255 255 0) text    -- Creates a text surface with given font text and color
     surface <- SDL.createTextureFromSurface renderer textSurface      -- creates a texture from the texutre surface

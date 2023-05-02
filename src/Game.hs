@@ -8,7 +8,6 @@ import Control.Monad (unless, void, when)
 import qualified SDL.Font as Font
 import Foreign.C.Types (CInt)
 import Text.Read (readMaybe)
-import Data.Text(Text)
 import DrawFunctions
 import DataTypes
 import UtilityFunctions
