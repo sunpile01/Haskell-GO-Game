@@ -50,10 +50,11 @@ handleMouseClick gameState (SDL.Event _ (SDL.MouseButtonEvent mouseButtonEventDa
       nextTurnStone = if stone == Just Black then Just White else Just Black          -- Stone color for next turn
       move = Move stone (x', y')                                                      -- Move to be placed 
       previousBoard = currBoard gameState 
-      twoTurnsAgoBoard = if isEmptyBoard (prevBoard gameState) then [] else prevBoard gameState -- Board two turns ago
-  in if isValidCoord (currBoard gameState) (x',y') && validMove (currBoard gameState) twoTurnsAgoBoard stone (x', y')
+      twoTurnsAgoBoard' = if isEmptyBoard (prevBoard gameState) then [] else prevBoard gameState -- Board two turns ago
+      gameStateForValid = gameState {twoTurnsAgoBoard = twoTurnsAgoBoard', prevBoard = previousBoard}
+  in if isValidCoord (currBoard gameState) (x',y') && validMove gameStateForValid stone (x', y')
       -- If the move was valid then we update the gameState with the new move and the updated properties defined earlier
-     then let updatedBoard = GameState (placeStone move (currBoard gameState)) previousBoard twoTurnsAgoBoard (capturedStones gameState) (scoringMethod gameState) nextTurnStone (sizeBoard gameState)
+     then let updatedBoard = GameState (placeStone move (currBoard gameState)) previousBoard twoTurnsAgoBoard' (capturedStones gameState) (scoringMethod gameState) nextTurnStone (sizeBoard gameState)
               boardWCaptures = captureStones updatedBoard stone               -- Capture any stones that had no liberties after the move 
            in boardWCaptures                                                  -- Final updated game state
      else gameState                                                           -- Move not valid return the old gameState
@@ -88,7 +89,7 @@ updateGameComputerMove gameState computerMove =
         MostEliminated -> bestMoveForCapture gameState              -- Computer move to capture most opponent stones
         ExtendLiberties -> bestMoveForLiberties gameState           -- Computer move that increases the liberties of a group the most
         ConnectGroups -> bestMoveForConnectGroups gameState         -- Computer move that connects the most amount of equal colored groups
-  in if isJust bestMoveCoord && validMove (currBoard gameState) twoTurnsAgoBoard stone (fromJust bestMoveCoord) && 
+  in if isJust bestMoveCoord && validMove gameState stone (fromJust bestMoveCoord) && 
                                                             isValidCoord (currBoard gameState) (fromJust bestMoveCoord)
      then let move = Move stone (fromJust bestMoveCoord)          -- If the move is valid as checked above then create the move and
               -- Update the gameState with all the variables we defined earlier that is needed in GameState and place the latest move
@@ -149,7 +150,7 @@ findBestMove gameState mapper = do
   let currentPlayer = playerTurn gameState
       allCoordinates = getAllCoordinates      -- Get all coordinates since we will perform an exhaustive search
       -- Remove all none valid coordinates
-      validCoordinates = filter (validMove (currBoard gameState) (prevBoard gameState) currentPlayer) (allCoordinates (sizeBoard gameState))
+      validCoordinates = filter (validMove gameState currentPlayer) (allCoordinates (sizeBoard gameState))
       -- Creates tuples with the potential coordinate and the integer which is the 'value' of that move (higher = better), mapper is a funtion sent as a parameter
       moves = map (\coord -> (coord, mapper coord)) validCoordinates  
   if null moves then Nothing else Just (fst (maximumBy (comparing snd) moves)) -- Finds the coordinate with the highest corresponding integer value and returns it
@@ -166,31 +167,33 @@ placeStone (Move stone (x,y)) oldBoard =
   
 -- | Checks if a given move is valid. Calls helper functions to check the specific cases to satisfy a valid move.
 -- Every condition must be satisfied for the move to be valid.
-validMove :: Board -> Board -> Maybe Stone -> Coordinate -> Bool
-validMove currBoard twoTurnsAgoBoard stone coord = 
-     isEmptyPosition currBoard coord &&                        -- Checks if there is a stone on the coordinate for the stone to be placed
-     not (isKOMove currBoard twoTurnsAgoBoard coord stone) &&  -- Checks if the move would create KO (repeating board state two turns ago) 
-     not (isSuicideMove currBoard stone coord)                 -- Checks if the move would result in the stone having no liberties and not captureing a stone
+validMove :: GameState -> Maybe Stone -> Coordinate -> Bool
+validMove gameState stone coord = 
+     isEmptyPosition (currBoard gameState) coord &&                        -- Checks if there is a stone on the coordinate for the stone to be placed
+     not (isKOMove gameState coord stone) &&  -- Checks if the move would create KO (repeating board state two turns ago) 
+     not (isSuicideMove gameState stone coord)                 -- Checks if the move would result in the stone having no liberties and not captureing a stone
 
 -- | Checks if there is a stone on the coordinate for the stone to be placed
 isEmptyPosition :: Board -> Coordinate -> Bool
 isEmptyPosition board coord = isNothing (getStoneYX board coord)
 
 -- | Checks if the move would result in the stone having no liberties and not capturing an opponent stone
-isSuicideMove :: Board -> Maybe Stone -> Coordinate -> Bool
-isSuicideMove board stone coord =
-  let tempBoard = placeStone (Move stone coord) board           -- Simulate the placement of the stone
+isSuicideMove :: GameState -> Maybe Stone -> Coordinate -> Bool
+isSuicideMove gameState stone coord =
+  let tempBoard = placeStone (Move stone coord) (currBoard gameState)           -- Simulate the placement of the stone
       -- If Placement connects the stone to one or more equal color stones 'group' is all those coordinates, if not group is just the same coordinate
       group = findGroupWrapper tempBoard stone coord getStoneYX 
+      updatedGameState = gameState { currBoard = tempBoard }
       -- If the group (can be one stone) has no liberties and the move does not result in any captures then it is a suicide move
-  in not (groupHasLiberties tempBoard group getStoneYX) && null (capturedStones (captureStones (GameState tempBoard board [] [] TerritoryScoring Nothing 0) stone))
+  in not (groupHasLiberties tempBoard group getStoneYX) && null (capturedStones (captureStones updatedGameState stone))
 
 -- | Checks if the move would create KO (repeating board state two turns ago) 
-isKOMove :: Board -> Board -> Coordinate -> Maybe Stone -> Bool
-isKOMove currentBoard twoTurnsAgoBoard coord stone =
-  let tempBoard = placeStone (Move stone coord) currentBoard  -- Simulate placing the stone on the board
-      tempBoardCaptures = captureStones (GameState tempBoard [] [] [] TerritoryScoring Nothing 0) stone -- Simulate stones potentially being captured
-  in currBoard tempBoardCaptures == twoTurnsAgoBoard        -- If the simulated stone placing results in the same board state two turns ago it is a KO move
+isKOMove :: GameState-> Coordinate -> Maybe Stone -> Bool
+isKOMove gameState coord stone =
+  let tempBoard = placeStone (Move stone coord) (currBoard gameState)  -- Simulate placing the stone on the board
+      updatedGameState = gameState { currBoard = tempBoard }
+      tempBoardCaptures = captureStones updatedGameState stone -- Simulate stones potentially being captured
+  in currBoard tempBoardCaptures == twoTurnsAgoBoard gameState -- If the simulated stone placing results in the same board state two turns ago it is a KO move
 
 -- | Uses recursion and a list of already visited coordinates to find all stones in the group.
 -- A group is same colored stones that is vertically or horizontally adjacent. 
@@ -219,16 +222,16 @@ groupHasLiberties board group getStoneFunc = any (\coord -> emptyCoordinate boar
 -- | Function that checks if any stones or groups of stones on the board has 0 liberties, if they have 0 liberties the stone is captured
 -- and the stone value is replaced by 'Nothing' the color of the stone is added to the captured coordinates
 captureStones :: GameState -> Maybe Stone -> GameState
-captureStones board stone = board { currBoard = newStones, capturedStones = newCapturedStones } -- Updating the game state after capture
+captureStones gameState stone = gameState { currBoard = newStones, capturedStones = newCapturedStones } -- Updating the game state after capture
   where
     opponent = if stone == Just Black then Just White else Just Black   -- Opponent stone color
-    uniqueOpponentGroups = allUniqueGroupsOfColor opponent (currBoard board) (sizeBoard board)  -- All the unique opponent groups (can be a single stone)
+    uniqueOpponentGroups = allUniqueGroupsOfColor opponent (currBoard gameState) (sizeBoard gameState)  -- All the unique opponent groups (can be a single stone)
     -- Gets all the groups that has no liberties, this is a list of [[Coordinate]] because it is a list of groups
-    capturedGroups = filter (\group -> not (groupHasLiberties (currBoard board) group getStoneXY)) uniqueOpponentGroups
+    capturedGroups = filter (\group -> not (groupHasLiberties (currBoard gameState) group getStoneXY)) uniqueOpponentGroups
     stonesCaptured = concat capturedGroups   -- Here we flatten the [[Coordinate]] list into a list of [Coordinate]                   
-    newStones = foldl (`updateStones` Nothing) (currBoard board) stonesCaptured -- Updates the board with 'Nothing' for the capturedStones
+    newStones = foldl (`updateStones` Nothing) (currBoard gameState) stonesCaptured -- Updates the board with 'Nothing' for the capturedStones
      -- Adds the captured stones to the list of already captured stones as Stone color instead of the Coordinate
-    newCapturedStones = capturedStones board ++ map (const opponent) stonesCaptured
+    newCapturedStones = capturedStones gameState ++ map (const opponent) stonesCaptured
 
 -- | Gets all the unique groups of a single color on the board
 allUniqueGroupsOfColor :: Maybe Stone -> Board -> CInt -> [[Coordinate]]
