@@ -52,7 +52,7 @@ gameLoop renderer gameState count window = do
       qPressed = any isPressedQ events                          -- any checks for qPressed on the list of events and returns true or false
       newGameState = foldl handleInput gameState events         -- applies handleInput to the gameState for every event in the events list, thereby updating the gamestate 
       undoMove = any isPressedZ events                          -- Checks if Z is pressed
-      playerPassed = any isPressedS events                  -- Checks if space is pressed
+      playerPassed = any isPressedS events                      -- Checks if S is pressed
       (finalBoard, count') = decideBoard
         where                                 
           decideBoard       -- Locally defined function that uses guards to update the board state based on the users input              
@@ -67,7 +67,7 @@ gameLoop renderer gameState count window = do
   drawBoard renderer finalBoard (sizeBoard newGameState) -- Draws the game board
   drawInterface renderer gameState window
   SDL.present renderer
-  -- Keep running the game if user has not pressed q or x or the winner has not been decided yet
+  -- Keep running the game if user has not pressed q or x and the winner has not been decided yet
   unless (xTopRightPressed || qPressed || count' ==2 ) (gameLoop renderer (newGameState {currBoard = finalBoard}) count' window) 
   
 -- | Simply checks if the Q key was pressed
@@ -88,7 +88,7 @@ isPressedZ event =
         SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeZ
       _ -> False    
 
--- | Simply checks if the Space key was pressed
+-- | Simply checks if the S key was pressed
 isPressedS :: SDL.Event -> Bool
 isPressedS event =
   case SDL.eventPayload event of
