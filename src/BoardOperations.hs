@@ -74,8 +74,8 @@ handleKeyPress gameState (SDL.Event _ (SDL.KeyboardEvent keyboardEvent))
       let nextPlayer = if playerTurn gameState == Just White then Just Black else Just White 
       in gameState { playerTurn = nextPlayer }
   | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeS =
-        let nextPlayer = if playerTurn gameState == Just White then Just Black else Just White 
-        in gameState { playerTurn = nextPlayer }
+      let nextPlayer = if playerTurn gameState == Just White then Just Black else Just White
+      in gameState { playerTurn = nextPlayer }
 handleKeyPress gameState _ = gameState
 
 -- | Places the computer move on the board by pattern matching the type of ComputerMove and then executing the appropriate function
@@ -186,7 +186,7 @@ isSuicideMove gameState stone coord =
   let tempBoard = placeStone (Move stone coord) (currBoard gameState)           -- Simulate the placement of the stone
       -- If Placement connects the stone to one or more equal color stones 'group' is all those coordinates, if not group is just the same coordinate
       group = findGroupWrapper tempBoard stone coord getStoneYX 
-      updatedGameState = gameState { currBoard = tempBoard }
+      updatedGameState = gameState { currBoard = tempBoard, capturedStones = [] }
       -- If the group (can be one stone) has no liberties and the move does not result in any captures then it is a suicide move
   in not (groupHasLiberties tempBoard group getStoneYX) && null (capturedStones (captureStones updatedGameState stone))
 
