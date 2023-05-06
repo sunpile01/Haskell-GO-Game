@@ -73,6 +73,9 @@ handleKeyPress gameState (SDL.Event _ (SDL.KeyboardEvent keyboardEvent))
   | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeZ =
       let nextPlayer = if playerTurn gameState == Just White then Just Black else Just White 
       in gameState { playerTurn = nextPlayer }
+  | SDL.keyboardEventKeyMotion keyboardEvent == SDL.Pressed && SDL.keysymKeycode (SDL.keyboardEventKeysym keyboardEvent) == SDL.KeycodeS =
+        let nextPlayer = if playerTurn gameState == Just White then Just Black else Just White 
+        in gameState { playerTurn = nextPlayer }
 handleKeyPress gameState _ = gameState
 
 -- | Places the computer move on the board by pattern matching the type of ComputerMove and then executing the appropriate function

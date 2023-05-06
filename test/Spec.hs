@@ -71,17 +71,14 @@ hspecTests = hspec $ do
              
   describe "validMove" $ do
     it "returns True for a valid move" $ do
-      let currBoard = testBoard
-          twoTurnsAgoBoard = testBoard2
-          stone = Just Black
+      let stone = Just Black
           coord = (5,5)
-      validMove currBoard twoTurnsAgoBoard stone coord `shouldBe` True
+      validMove testGameState stone coord `shouldBe` True
              
     it "returns False for a suicide move" $ do
-      let currBoard = testBoard
-          stone = Just Black
+      let stone = Just Black
           coord = (0,1)
-      validMove currBoard currBoard stone coord `shouldBe` False
+      validMove testGameState stone coord `shouldBe` False
   describe "isEmptyPosition" $ do
     it "checks if the position is empty" $ do
       isEmptyPosition testBoard (0, 0) `shouldBe` False
